@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msg.msg import Twist
+from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Joy
 from std_msgs.msg import String
 from enums.Buttons import Buttons
