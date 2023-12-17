@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Lights(Enum):
+class Buttons(Enum):
     
     TURBO = 0;
     BOUNCE = 1;
@@ -9,3 +9,4 @@ class Lights(Enum):
     BLINK_LEFT = 4;
     BLINK_RIGHT = 5;
     DISCO = 8;
+    CAMERA = 9;

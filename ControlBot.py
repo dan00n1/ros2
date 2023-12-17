@@ -3,13 +3,16 @@ from rclpy.node import Node
 from geometry_msg.msg import Twist
 from sensor_msgs.msg import Joy
 from std_msgs.msg import String
-from enums.Lights import Lights
+from enums.Buttons import Buttons
+from controllers.CameraController import CameraController
 
 class ControlBot(Node):
 
+    # Button parameters
+    pressed = 1;
+    unloosened = 0;
+
     # Light parameters
-    lightOn = 1;
-    lightOff = 0;
     ledBar = String();
 
     # Speed parameters
@@ -20,16 +23,22 @@ class ControlBot(Node):
     defaultMaxSpeed = 0.22;
     defaultAngle = 2.84;
 
+    # Camera infrared parameters
+    depth_width = 848;
+    depth_height = 480;
+    depth_fps = 30.0;
+
     def __init__(self):
         super().__init__('move_controller_node')
         
         self.turbo = 0.5;
         self.enabled = False;
-        self.oldMessage =[];
+        self.oldMessage = [];
     
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10);
         self.subscription = self.create_subscription(Joy, '/joy', self.joy_callback, 10);
         self.lights = self.create_publisher(String, '/micro_ros_arduino_subscriber', 10);
+        self.camera = CameraController();
     
         self.geometry = Twist();
         self.get_logger().info("Move Controller Node has been started");
@@ -46,6 +55,8 @@ class ControlBot(Node):
         self.setControlGeometry(message);
         self.publisher.publish(self.geometry);
 
+        self.camera.getView(message);
+
     def setLight(self, message: Joy):
         """
         Sets the light based on the button pressed
@@ -57,7 +68,7 @@ class ControlBot(Node):
         for i in range(0, len(message.buttons)):
             self.setTurbo(message.buttons[0]);
 
-            if message.buttons[i] == self.lightOn:
+            if message.buttons[i] == self.pressed:
                 self.getLightReference(i);
     
     def setTurbo(self, message):
@@ -68,7 +79,7 @@ class ControlBot(Node):
         :type message: Joy
         """
 
-        if message == self.lightOn:
+        if message == self.pressed:
             self.turbo = self.rabbit;
         else:
             self.turbo = self.turtle;
@@ -82,20 +93,20 @@ class ControlBot(Node):
         """
 
         match message: 
-            case Lights.TURBO.value:
-                self.setLightBar(Lights.TURBO.name.capitalize());
-            case Lights.BOUNCE.value:
-                self.setLightBar(Lights.BOUNCE.name.capitalize());
-            case Lights.EVEN_ODD.value:
-                self.setLightBar(Lights.EVEN_ODD.name.capitalize());
-            case Lights.CENTER_OUT.value:
-                self.setLightBar(Lights.CENTER_OUT.name.capitalize());
-            case Lights.BLINK_LEFT.value:
-                self.setLightBar(Lights.BLINK_LEFT.name.capitalize());
-            case Lights.BLINK_RIGHT.value:
-                self.setLightBar(Lights.BLINK_RIGHT.name.capitalize());
-            case Lights.DISCO.value:
-                self.setLightBar(Lights.DISCO.name.capitalize());
+            case Buttons.TURBO.value:
+                self.setLightBar(Buttons.TURBO.name.capitalize());
+            case Buttons.BOUNCE.value:
+                self.setLightBar(Buttons.BOUNCE.name.capitalize());
+            case Buttons.EVEN_ODD.value:
+                self.setLightBar(Buttons.EVEN_ODD.name.capitalize());
+            case Buttons.CENTER_OUT.value:
+                self.setLightBar(Buttons.CENTER_OUT.name.capitalize());
+            case Buttons.BLINK_LEFT.value:
+                self.setLightBar(Buttons.BLINK_LEFT.name.capitalize());
+            case Buttons.BLINK_RIGHT.value:
+                self.setLightBar(Buttons.BLINK_RIGHT.name.capitalize());
+            case Buttons.DISCO.value:
+                self.setLightBar(Buttons.DISCO.name.capitalize());
 
     def setLightBar(self, message: Joy):
         """
